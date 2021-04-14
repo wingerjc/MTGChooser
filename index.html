@@ -6,8 +6,32 @@
 <body>
 
   <div>
-    <em>Coming Soon!</em>
+    Number of Participants
+    <input type="number" />
   </div>
-
+  <div>
+    Items per participant
+    <input id="participants" type="number" />
+  </div>
+  <div>
+    Number of uses per item
+    <input id="uses" type="number" />
+  </div>
+  <div>
+    Items
+    <input id="items" type="text" />
+  </div>
+  <button value="Choose" id="ChooseButton" />
+  <div id="results" />
+  
+  <script type="application/javascript">
+    El = function(id) {
+      return document.getElementById(id);
+    }
+    
+    El("ChooseButton").onclick = function() {
+      alert(El("participants").value);
+    }
+  </script>
 </body>
 </html>

@@ -6,31 +6,133 @@
 <body>
 
   <div>
-    Number of Participants
-    <input type="number" />
+    <div>
+      <label for="participants">Number of Participants</label>
+      <input id="participants" type="number" value="1" />
+    </div>
+    <div>
+      <label for="items_per">Items per participant</label>
+      <input id="items_per" type="number" value="1" />
+    </div>
+    <div>
+      <label for="uses">Number of uses per item</label>
+      <input id="uses" type="number" value="1" />
+    </div>
+    <div>
+      <label for="items">Items</label>
+      <textarea id="items" rows="4" cols="50"></textarea>
+    </div>
+    <button value="Choose" id="choose_button">Choose</button>
+    <button value="Clear" id="clear_button">Clear</button>
   </div>
-  <div>
-    Items per participant
-    <input id="participants" type="number" />
-  </div>
-  <div>
-    Number of uses per item
-    <input id="uses" type="number" />
-  </div>
-  <div>
-    Items
-    <input id="items" type="text" />
-  </div>
-  <button value="Choose" id="ChooseButton" />
-  <div id="results" />
+  <div id="result_err"></div>
+  <div id="result_space"></div>
   
   <script type="application/javascript">
-    El = function(id) {
+  	const LineRegex = /^(([WUBRG]+|C):)?\s*([^:\s][^:]*?)\s*$/;
+    const ColorCaptureGroup = 2;
+    const NameCaptureGroup = 3;
+    
+    const IZZET = "<div class=\"color_type izzet\" aria-label=\"izzet\"/>";
+    
+    function El(id) {
       return document.getElementById(id);
     }
     
-    El("ChooseButton").onclick = function() {
-      alert(El("participants").value);
+    function Clear() {
+    	El("result_err").innerHTML = "";
+    	El("result_space").innerHTML = "";
+    }
+    
+		function ValidateItems(items) {
+    	var lines = items.split("\n")
+      for (var i = 0; i < lines.length; i++) {
+        if (!LineRegex.test(lines[i])) {
+        	return { valid: false, err: "Invalid line format \"" + lines[i] + "\""}
+        }
+      }
+      
+      return { valid: true, err: ""};
+    }
+    
+    function GetColors(colorStr) {
+      if (colorStr == undefined || colorStr === null || colorStr.length == 0) {
+        return null;
+      }
+    	if (colorStr === "C") {
+      	return "C";
+      }
+      result = "";
+      wubrg = "WUBRG";
+      for(var i = 0; i < wubrg.length; i++) {
+        if (colorStr.includes(wubrg[i])) {
+        	result += wubrg[i];
+        }
+      }
+      return result;
+    }
+    
+    
+    function ProcessItems(items) {
+      var finalItems = [];
+      const uses = parseInt(El("uses").value, 10);
+      
+      var lines = items.split("\n");
+      for (var i = 0; i < lines.length; i++) {
+      	lineMatch = lines[i].match(LineRegex);
+      	finalItems.push({
+        	colors: GetColors(lineMatch[ColorCaptureGroup]),
+          name: lineMatch[NameCaptureGroup],
+          uses: uses,
+        });
+      }
+      return finalItems;
+    }
+    
+    El("clear_button").onclick = Clear;
+    
+    El("choose_button").onclick = function() {
+    	const rawItems = El("items").value;
+      const resultErr = El("result_err");
+      const result = El("result_space");
+      
+      Clear();
+      
+      const valid = ValidateItems(rawItems);
+      if (!valid.valid) {
+      	resultErr.innerHTML = "Could not validate input:" + valid.err;
+      	return;
+      }
+      
+      items = ProcessItems(rawItems);
+      var participants = El("participants").value;
+      var itemsPer = El("items_per").value;
+      var uses = El("uses").value;
+      if (items.length * uses < participants * itemsPer ) {
+      	resultErr.innerHTML = "More items per particpant than uses per item allows."
+        return;
+      }
+      
+      console.log(items);
+      
+      var left = items.length * uses;
+      var resultStr = "";
+      for (var i = 0; i < participants; i++) {
+        resultStr += "Participant " + (i+1) + ":<br />\n";
+        for (var j = 0; j < itemsPer; j++) {
+        	var index = Math.floor(Math.random() * left);
+          var k = 0;
+          while (items[k].uses == 0 || index > 0) {
+          	index -= items[k].uses;
+            k++
+          }
+          resultStr += " - " + items[k].name + "<br />\n";
+          items[k].uses--;
+          left--;
+        }
+        resultStr += "<br />\n";
+      }
+      result.innerHTML = resultStr;
     }
   </script>
 </body>

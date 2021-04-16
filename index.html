@@ -5,7 +5,7 @@
 </head>
 <body>
 
-  <div>
+  <div style="vertical-align: text-top;">
     <div>
       <label for="participants">Number of Participants</label>
       <input id="participants" type="number" value="1" />
@@ -22,6 +22,15 @@
       <label for="items">Items</label>
       <textarea id="items" rows="4" cols="50"></textarea>
     </div>
+    <div>
+      <label for="examples">Examples</label>
+      <select id="examples">
+        <option value="none" default>None</option>
+        <option value="guilds">Guilds</option>
+        <option value="shards">Shards/Wedges</option>
+        <option value="jumpstart_jw">Custom Jumpstart list</option>
+      </select>
+    </div>
     <button value="Choose" id="choose_button">Choose</button>
     <button value="Clear" id="clear_button">Clear</button>
   </div>
@@ -32,8 +41,128 @@
   	const LineRegex = /^(([WUBRG]+|C):)?\s*([^:\s][^:]*?)\s*$/;
     const ColorCaptureGroup = 2;
     const NameCaptureGroup = 3;
+   
+    const ColorIconHTML = [
+    	`<div class="icon" style="display: inline; max-width: 30px;" aria-label=":alt:">
+        <svg style="max-width: 20px; padding-right: 5px; padding-top: 4px;" viewBox="0 0 40 40" fill=":fill:\" stroke=":stroke:" stroke-width="5">
+          <circle cx="20" cy="20" r="14" />
+        </svg>
+      </div>`,
+    	`<div class="icon" style="display: inline; max-width: 30px;" aria-label=":alt:">
+        <svg style="max-width: 20px; padding-right: 5px; padding-top: 4px;" viewBox="0 0 40 40\" fill=":fill:" stroke=":stroke:" stroke-width="5">
+          <mask id="mask2" stroke-width:="1">
+            <rect x="0" y="0" width="40" height="40" fill="black" />
+            <polygon points="-4,40 40,40 40,-4" fill="white" />
+          </mask>
+          <circle cx="20" cy="20" r="14" />
+          <circle cx="20" cy="20" r="14" fill=":fill2:" mask="url(#mask2)"/>
+        </svg>
+      </div>`,
+      "",
+      "",
+      `<div class="icon" style="display: inline; max-width: 30px;" aria-label=":alt:">
+        <svg style="max-width: 20px; padding-right: 5px; padding-top: 4px;" viewBox="0 0 40 40" stroke=":stroke:" stroke-width="5">
+          <circle cx="20" cy="20" r="14" fill="yellow"/>
+          <mask id="mask5" stroke-width="0">
+            <rect x="0" y="0" width="40" height="40" fill="black" />
+            <polygon points="0,20 20,20 0,-80" fill="white" />
+          </mask>
+          <circle cx="20" cy="20" r="14" fill="DodgerBlue" mask="url(#mask5)" transform="rotate(124, 20, 20)"/>
+          <circle cx="20" cy="20" r="14" fill="black" mask="url(#mask5)" transform="rotate(196, 20, 20)"/>
+          <circle cx="20" cy="20" r="14" fill="red" mask="url(#mask5)" transform="rotate(268, 20, 20)"/>
+          <circle cx="20" cy="20" r="14" fill="green" mask="url(#mask5)" transform="rotate(340, 20, 20)"/>
+          
+        </svg>
+      </div>`
+      ];
+    const ColorSet = {
+    	"W": { ":alt:":"White", ":fill:": "yellow"},
+    	"U": { ":alt:":"Blue", ":fill:": "DodgerBlue"},
+    	"B": { ":alt:":"Black", ":fill:": "black"},
+    	"R": { ":alt:":"Red", ":fill:": "red"},
+    	"G": { ":alt:":"Green", ":fill:": "green"},
+    	"C": { ":alt:":"Colorless", ":fill:": "DimGray"},
+    	"WU": { ":alt:":"Azorius (WU)", ":fill:": "yellow", ":fill2:": "DodgerBlue"},
+    	"WB": { ":alt:":"Orzhov (WB)", ":fill:": "yellow", ":fill2:": "black"},
+    	"WR": { ":alt:":"Boros (WR)", ":fill:": "yellow", ":fill2:": "red"},
+    	"WG": { ":alt:":"Selesnya (WG)", ":fill:": "yellow", ":fill2:": "green"},
+    	"UB": { ":alt:":"Dimir (UB)", ":fill:": "DodgerBlue", ":fill2:": "black"},
+    	"UR": { ":alt:":"Izzet (UR)", ":fill:": "DodgerBlue", ":fill2:": "red"},
+    	"UG": { ":alt:":"Simic (UG)", ":fill:": "DodgerBlue", ":fill2:": "green"},
+    	"BR": { ":alt:":"Rakdos (BR)", ":fill:": "black", ":fill2:": "DodgerBlue"},
+    	"BG": { ":alt:":"Golgari (BG)", ":fill:": "black", ":fill2:": "green"},
+    	"RG": { ":alt:":"Gruul (RG)", ":fill:": "red", ":fill2:": "green"},
+      "WUBRG": { ":alt:": "WURGB" }
+    }
     
-    const IZZET = "<div class=\"color_type izzet\" aria-label=\"izzet\"/>";
+    const ColorSetDefaults = {
+      ":stroke:": "black",
+    }
+    
+    const Examples = {
+    	"none": "",
+      "guilds": `WU: Azorius
+      WB: Orzhov
+      WR: Boros
+      WG: Selesnya
+      UB: Dimir
+      UR: Izzet
+      UG: Simic
+      BR: Rakdos
+      BG: Golgari
+      RG: Gruul`,
+      "shards": `WUB: Esper
+      WUR: Jeskai
+      WUG: Bant
+      WBR: Mardu
+      WBG: Abzan
+      WRG: Naya
+      UBR: Grixis
+      UBG: Sultai
+      URG: Temur
+      BRG: Jund`,
+      "jumpstart_jw": `WUBRG:  Rainbow
+      B:  Discarding
+      B:  Minions
+      B:  Reanimated
+      B:  Rogues
+      B:  Spooky
+      B:  Spooky
+      B:  Vampires
+      B:  Witchcraft
+      G:  Cats
+      G:  Dinosaurs
+      G:  Elves
+      G:  Plus One
+      G:  Predatory
+      G:  Predatory
+      G:  Tree-Hugging
+      G:  Walls
+      R:  Devilish
+      R:  Dragons
+      R:  Goblins
+      R:  Goblins
+      R:  Lightning
+      R:  Minotaurs
+      R:  Smashing
+      R:  Spellcasting
+      U:  Above the clouds
+      U:  Mill
+      U:  Pirates
+      U:  Spirits
+      U:  Spirits
+      U:  Under the Sea
+      U:  Well-Read
+      U:  Wizards
+      W:  Angels
+      W:  Doctor
+      W:  Dogs
+      W:  Enchanted
+      W:  Feathered Friends
+      W:  Feathered Friends
+      W:  Heavily Armored
+      W:  Legion`
+    }
     
     function El(id) {
       return document.getElementById(id);
@@ -72,6 +201,22 @@
       return result;
     }
     
+    function GetIcon(colorStr) {
+    	if (!ColorSet[colorStr]) {
+      return "";
+      }
+      
+      data = ColorSet[colorStr];
+      str = ColorIconHTML[colorStr.length-1];
+      for (var key in data) {
+      	str = str.replace(key, data[key])
+      }
+      for (var key in ColorSetDefaults) {
+        str = str.replace(key, ColorSetDefaults[key])
+      }
+      
+      return str;
+    }
     
     function ProcessItems(items) {
       var finalItems = [];
@@ -92,7 +237,7 @@
     El("clear_button").onclick = Clear;
     
     El("choose_button").onclick = function() {
-    	const rawItems = El("items").value;
+    	const rawItems = El("items").value.trim();
       const resultErr = El("result_err");
       const result = El("result_space");
       
@@ -122,18 +267,25 @@
         for (var j = 0; j < itemsPer; j++) {
         	var index = Math.floor(Math.random() * left);
           var k = 0;
-          while (items[k].uses == 0 || index > 0) {
+          while (items[k].uses == 0 || index > items[k].uses) {
           	index -= items[k].uses;
             k++
           }
-          resultStr += " - " + items[k].name + "<br />\n";
+          resultStr += " - " + GetIcon(items[k].colors) + items[k].name + "<br />\n";
           items[k].uses--;
           left--;
         }
         resultStr += "<br />\n";
       }
       result.innerHTML = resultStr;
-    }
+    };
+    
+    El("examples").onchange = function() {
+    	val = El("examples").value
+      El("result_space").innerHTML = "";
+      El("result_err").innerHTML = "";
+      El("items").value = Examples[val].replace(/\n\s+/g,"\n");
+    };
   </script>
 </body>
 </html>

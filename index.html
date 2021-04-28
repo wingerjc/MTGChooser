@@ -273,7 +273,7 @@
         for (var j = 0; j < itemsPer; j++) {
         	var index = Math.floor(Math.random() * left);
           var k = 0;
-          while (items[k].uses == 0 || index > items[k].uses) {
+          while (items[k].uses == 0 || index >= items[k].uses) {
           	index -= items[k].uses;
             k++
           }
